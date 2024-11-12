@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytesResumable,
+} from "firebase/storage";
+import { app } from "../firebase";
 import Navigation from "../component/Navigation";
 
 function EditEmployee() {
@@ -13,11 +20,12 @@ function EditEmployee() {
     Course: [],
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // To handle error messages
-  const { slno } = useParams(); // Get employee ID (slno) from URL params
+  const [error, setError] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const { slno } = useParams();
   const navigate = useNavigate();
 
-  // Fetch employee data by slno
   useEffect(() => {
     const fetchEmployeeDetails = async () => {
       try {
@@ -25,9 +33,8 @@ function EditEmployee() {
           `http://localhost:3003/api/employee/${slno}`
         );
         const data = await response.json();
-
         if (response.ok) {
-          setEmployee(data); // Set the employee data to state
+          setEmployee(data);
         } else {
           setError("Failed to fetch employee data");
         }
@@ -36,14 +43,11 @@ function EditEmployee() {
         setError("An error occurred while fetching employee details.");
       }
     };
-
     fetchEmployeeDetails();
   }, [slno]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // For checkboxes (Course)
     if (name === "Course") {
       setEmployee((prev) => {
         const updatedCourses = prev.Course.includes(value)
@@ -59,26 +63,65 @@ function EditEmployee() {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+    }
+  };
+
+  useEffect(() => {
+    if (imageFile) {
+      uploadImage();
+    }
+  }, [imageFile]);
+
+  const uploadImage = async () => {
+    const storage = getStorage(app);
+    const fileName = new Date().getTime() + imageFile.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, imageFile);
+
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress = Math.round(
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+        );
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error("Error uploading image:", error);
+        alert("Error uploading image");
+        setImageFile(null);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          setEmployee((prev) => ({ ...prev, Image: downloadURL }));
+          setUploadProgress(0);
+        });
+      }
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(""); // Clear any previous errors
+    setError("");
 
     try {
       const response = await fetch(
         `http://localhost:3003/api/employee/${slno}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(employee),
         }
       );
 
       if (response.ok) {
         alert("Employee updated successfully!");
-        navigate("/employee-list"); // Redirect to employee list
+        navigate("/employee-list");
       } else {
         setError("Failed to update employee");
       }
@@ -92,15 +135,10 @@ function EditEmployee() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Navigation Bar */}
       <Navigation />
-
-      {/* Dashboard Bar */}
       <div className="bg-yellow-400 text-black font-semibold p-2 text-lg">
         Edit Employee
       </div>
-
-      {/* Main Content */}
       <main className="p-6 space-y-4">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">
@@ -111,10 +149,8 @@ function EditEmployee() {
               {error}
             </div>
           )}
-          {/* Display error message */}
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
-              {/* Name */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Employee Name</label>
                 <input
@@ -128,7 +164,6 @@ function EditEmployee() {
                 />
               </div>
 
-              {/* Email */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Employee Email</label>
                 <input
@@ -142,7 +177,6 @@ function EditEmployee() {
                 />
               </div>
 
-              {/* Mobile */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Employee Mobile</label>
                 <input
@@ -150,13 +184,13 @@ function EditEmployee() {
                   name="Mobile"
                   value={employee.Mobile}
                   onChange={handleChange}
+                  maxLength={10}
                   className="input input-bordered w-full text-white placeholder-gray-500"
                   placeholder="Enter Mobile No"
                   required
                 />
               </div>
 
-              {/* Designation */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Designation</label>
                 <select
@@ -173,7 +207,6 @@ function EditEmployee() {
                 </select>
               </div>
 
-              {/* Gender (Radio Buttons) */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Gender</label>
                 <div className="flex gap-4 text-black">
@@ -202,7 +235,6 @@ function EditEmployee() {
                 </div>
               </div>
 
-              {/* Course (Checkboxes) */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Course</label>
                 <div className="flex gap-4 text-black">
@@ -242,33 +274,34 @@ function EditEmployee() {
                 </div>
               </div>
 
-              {/* Image Upload */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Employee Image</label>
                 <input
                   type="file"
-                  name="Image"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      const imageUrl = URL.createObjectURL(file);
-                      setEmployee((prev) => ({
-                        ...prev,
-                        Image: imageUrl,
-                      }));
-                    }
-                  }}
+                  accept="image/*"
+                  onChange={handleImageChange}
                   className="file-input file-input-bordered w-full"
                 />
               </div>
+
+              {uploadProgress > 0 && (
+                <progress
+                  value={uploadProgress}
+                  max={100}
+                  className="progress progress-info mt-2"
+                >
+                  {uploadProgress}%
+                </progress>
+              )}
             </div>
 
-            {/* Submit Button */}
             <div className="flex justify-end mt-6">
               <button
                 type="submit"
                 className="btn btn-primary text-white"
-                disabled={loading}
+                disabled={
+                  loading || (uploadProgress > 0 && uploadProgress < 100)
+                }
               >
                 {loading ? "Updating..." : "Update Employee"}
               </button>

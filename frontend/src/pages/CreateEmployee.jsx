@@ -1,5 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytesResumable,
+} from "firebase/storage";
+import { app } from "../firebase";
 import Navigation from "../component/Navigation";
 
 function CreateEmployee() {
@@ -12,8 +19,10 @@ function CreateEmployee() {
     Gender: "",
     Course: [],
   });
-
+  console.log(employee.Image);
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -29,6 +38,47 @@ function CreateEmployee() {
     } else {
       setEmployee((prev) => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+    }
+  };
+
+  useEffect(() => {
+    if (imageFile) {
+      uploadImage();
+    }
+  }, [imageFile]);
+
+  const uploadImage = async () => {
+    const storage = getStorage(app);
+    const fileName = new Date().getTime() + imageFile.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, imageFile);
+
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress = Math.round(
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+        );
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error("Error uploading image:", error);
+        alert("Error uploading image");
+        setImageFile(null);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          setEmployee((prev) => ({ ...prev, Image: downloadURL }));
+          setUploadProgress(0); // Reset progress after upload
+        });
+      }
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -69,7 +119,6 @@ function CreateEmployee() {
           </h2>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
-              {/* Name */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Employee Name</label>
                 <input
@@ -82,7 +131,7 @@ function CreateEmployee() {
                   required
                 />
               </div>
-              {/* Email */}
+
               <div className="form-control w-full">
                 <label className="label text-gray-800">Employee Email</label>
                 <input
@@ -95,20 +144,21 @@ function CreateEmployee() {
                   required
                 />
               </div>
-              {/* Mobile */}
+
               <div className="form-control w-full">
                 <label className="label text-gray-800">Employee Mobile</label>
                 <input
-                  type="text"
+                  type="text" // Changed to text to control length manually
                   name="Mobile"
                   value={employee.Mobile}
                   onChange={handleChange}
+                  maxLength={10} // Set maxLength attribute for better UX
                   className="input input-bordered w-full text-white placeholder-gray-500"
                   placeholder="Enter Mobile No"
                   required
                 />
               </div>
-              {/* Designation */}
+
               <div className="form-control w-full">
                 <label className="label text-gray-800">Designation</label>
                 <select
@@ -118,15 +168,13 @@ function CreateEmployee() {
                   className="select select-bordered w-full text-white"
                   required
                 >
-                  <option value="" className="text-gray-800">
-                    Select Designation
-                  </option>
+                  <option value="">Select Designation</option>
                   <option value="HR">HR</option>
                   <option value="Manager">Manager</option>
                   <option value="Sales">Sales</option>
                 </select>
               </div>
-              {/* Gender (Radio Buttons) */}
+
               <div className="form-control w-full">
                 <label className="label text-gray-800">Gender</label>
                 <div className="flex gap-4 text-black">
@@ -138,7 +186,7 @@ function CreateEmployee() {
                       checked={employee.Gender === "Male"}
                       onChange={handleChange}
                       className="radio"
-                    />{" "}
+                    />
                     Male
                   </label>
                   <label>
@@ -149,12 +197,12 @@ function CreateEmployee() {
                       checked={employee.Gender === "Female"}
                       onChange={handleChange}
                       className="radio"
-                    />{" "}
+                    />
                     Female
                   </label>
                 </div>
               </div>
-              {/* Course (Checkboxes) */}
+
               <div className="form-control w-full">
                 <label className="label text-gray-800">Course</label>
                 <div className="flex gap-4 text-black">
@@ -166,7 +214,7 @@ function CreateEmployee() {
                       checked={employee.Course.includes("MCA")}
                       onChange={handleChange}
                       className="checkbox"
-                    />{" "}
+                    />
                     MCA
                   </label>
                   <label>
@@ -177,7 +225,7 @@ function CreateEmployee() {
                       checked={employee.Course.includes("BCA")}
                       onChange={handleChange}
                       className="checkbox"
-                    />{" "}
+                    />
                     BCA
                   </label>
                   <label>
@@ -188,22 +236,42 @@ function CreateEmployee() {
                       checked={employee.Course.includes("BSC")}
                       onChange={handleChange}
                       className="checkbox"
-                    />{" "}
+                    />
                     BSC
                   </label>
                 </div>
               </div>
-              {/* Image Upload */}
-              {/* Add image upload handling here if needed */}
+
+              <div className="form-control w-full">
+                <label className="label text-gray-800">Employee Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="file-input file-input-bordered w-full"
+                />
+              </div>
+
+              {uploadProgress > 0 && (
+                <progress
+                  value={uploadProgress}
+                  max={100}
+                  className="progress progress-info mt-2"
+                >
+                  {uploadProgress}%
+                </progress>
+              )}
             </div>
-            {/* Submit Button */}
+
             <div className="flex justify-end mt-6">
               <button
                 type="submit"
                 className={`btn btn-primary text-white ${
                   loading ? "disabled" : ""
                 }`}
-                disabled={loading}
+                disabled={
+                  loading || (uploadProgress > 0 && uploadProgress < 100)
+                }
               >
                 {loading ? "Creating..." : "Create Employee"}
               </button>
