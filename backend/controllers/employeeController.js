@@ -3,10 +3,8 @@ import Employee from "../models/Employee.js";
 // Create a new employee
 export const createEmployee = async (req, res) => {
   try {
-    // Fetch the last created entry to determine the latest Id
     const lastEmployee = await Employee.findOne().sort({ Id: -1 });
     const newId = lastEmployee ? lastEmployee.Id + 1 : 1;
-
     const newEmployee = new Employee({ ...req.body, Id: newId });
     await newEmployee.save();
     res.status(201).json(newEmployee);
@@ -19,9 +17,9 @@ export const createEmployee = async (req, res) => {
 export const getEmployees = async (req, res) => {
   const {
     page = 1,
-    limit = 10,
+    limit = 5,
     sortBy = "Createdate",
-    sortOrder = "desc",
+    sortOrder = "asce",
     search = "",
   } = req.query;
 
@@ -43,7 +41,8 @@ export const getEmployees = async (req, res) => {
     res.json({
       employees,
       totalPages: Math.ceil(totalEmployees / limit),
-      currentPage: page,
+      currentPage: Number(page),
+      totalCount: totalEmployees,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

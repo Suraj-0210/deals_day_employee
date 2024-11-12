@@ -12,13 +12,13 @@ function CreateEmployee() {
     Gender: "",
     Course: [],
   });
+
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // For checkboxes (Course)
     if (name === "Course") {
       setEmployee((prev) => {
         const updatedCourses = prev.Course.includes(value)
@@ -27,10 +27,7 @@ function CreateEmployee() {
         return { ...prev, Course: updatedCourses };
       });
     } else {
-      setEmployee((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      setEmployee((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -41,15 +38,13 @@ function CreateEmployee() {
     try {
       const response = await fetch("http://localhost:3003/api/employee", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(employee),
       });
 
       if (response.ok) {
         alert("Employee created successfully!");
-        navigate("/employee-list"); // Redirect to employee list
+        navigate("/employee-list");
       } else {
         alert("Failed to create employee");
       }
@@ -63,15 +58,10 @@ function CreateEmployee() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Navigation Bar */}
       <Navigation />
-
-      {/* Dashboard Bar */}
       <div className="bg-yellow-400 text-black font-semibold p-2 text-lg">
         Create Employee
       </div>
-
-      {/* Main Content */}
       <main className="p-6 space-y-4">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">
@@ -92,7 +82,6 @@ function CreateEmployee() {
                   required
                 />
               </div>
-
               {/* Email */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Employee Email</label>
@@ -106,7 +95,6 @@ function CreateEmployee() {
                   required
                 />
               </div>
-
               {/* Mobile */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Employee Mobile</label>
@@ -120,7 +108,6 @@ function CreateEmployee() {
                   required
                 />
               </div>
-
               {/* Designation */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Designation</label>
@@ -139,7 +126,6 @@ function CreateEmployee() {
                   <option value="Sales">Sales</option>
                 </select>
               </div>
-
               {/* Gender (Radio Buttons) */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Gender</label>
@@ -152,7 +138,7 @@ function CreateEmployee() {
                       checked={employee.Gender === "Male"}
                       onChange={handleChange}
                       className="radio"
-                    />
+                    />{" "}
                     Male
                   </label>
                   <label>
@@ -163,12 +149,11 @@ function CreateEmployee() {
                       checked={employee.Gender === "Female"}
                       onChange={handleChange}
                       className="radio"
-                    />
+                    />{" "}
                     Female
                   </label>
                 </div>
               </div>
-
               {/* Course (Checkboxes) */}
               <div className="form-control w-full">
                 <label className="label text-gray-800">Course</label>
@@ -181,7 +166,7 @@ function CreateEmployee() {
                       checked={employee.Course.includes("MCA")}
                       onChange={handleChange}
                       className="checkbox"
-                    />
+                    />{" "}
                     MCA
                   </label>
                   <label>
@@ -192,7 +177,7 @@ function CreateEmployee() {
                       checked={employee.Course.includes("BCA")}
                       onChange={handleChange}
                       className="checkbox"
-                    />
+                    />{" "}
                     BCA
                   </label>
                   <label>
@@ -203,41 +188,24 @@ function CreateEmployee() {
                       checked={employee.Course.includes("BSC")}
                       onChange={handleChange}
                       className="checkbox"
-                    />
+                    />{" "}
                     BSC
                   </label>
                 </div>
               </div>
-
               {/* Image Upload */}
-              <div className="form-control w-full">
-                <label className="label text-gray-800">Employee Image</label>
-                <input
-                  type="file"
-                  name="Image"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      const imageUrl = URL.createObjectURL(file);
-                      setEmployee((prev) => ({
-                        ...prev,
-                        Image: imageUrl,
-                      }));
-                    }
-                  }}
-                  className="file-input file-input-bordered w-full"
-                />
-              </div>
+              {/* Add image upload handling here if needed */}
             </div>
-
             {/* Submit Button */}
             <div className="flex justify-end mt-6">
               <button
                 type="submit"
-                className="btn btn-primary text-white"
+                className={`btn btn-primary text-white ${
+                  loading ? "disabled" : ""
+                }`}
                 disabled={loading}
               >
-                {loading ? "Updating..." : "Update Employee"}
+                {loading ? "Creating..." : "Create Employee"}
               </button>
             </div>
           </form>

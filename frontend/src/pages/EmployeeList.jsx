@@ -1,47 +1,51 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { FaSearch } from "react-icons/fa"; // Importing the search icon
 import Navigation from "../component/Navigation";
 
 function EmployeeList() {
   const [employees, setEmployees] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const navigate = useNavigate();
 
+  const fetchEmployees = async (page = 1) => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:3003/api/employee?page=${page}&limit=6&sortBy=Email&sortOrder=asc`
+      );
+      const data = await response.json();
+      setEmployees(data.employees);
+      setTotalPages(data.totalPages);
+      setCurrentPage(data.currentPage);
+      setTotalCount(data.totalCount);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:3003/api/employee?page=1&limit=5"
-        );
-        const data = await response.json();
-        setEmployees(data.employees);
-        setTotalCount(data.totalCount);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching employees:", error);
-        setLoading(false);
-      }
-    };
     fetchEmployees();
-  }, []);
+  }, []); // Fetch employees whenever the search query changes
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this employee?"
-    );
-    if (confirmDelete) {
+    if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
         const response = await fetch(
           `http://localhost:3003/api/employee/${id}`,
-          {
-            method: "DELETE",
-          }
+          { method: "DELETE" }
         );
 
         if (response.ok) {
-          // Remove the deleted employee from the state
-          setEmployees(employees.filter((employee) => employee._id !== id));
+          setEmployees((prevEmployees) =>
+            prevEmployees.filter((employee) => employee.Id !== id)
+          );
           setTotalCount(totalCount - 1);
           alert("Employee deleted successfully!");
         } else {
@@ -49,13 +53,33 @@ function EmployeeList() {
         }
       } catch (error) {
         console.error("Error deleting employee:", error);
-        alert("An error occurred while deleting the employee.");
       }
     }
   };
 
-  const handleEdit = (id) => {
-    navigate(`/edit-employee/${id}`); // Navigate to the EditEmployee page with the employee's ID
+  const handleEdit = (id) => navigate(`/edit-employee/${id}`);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchEmployees(page);
+  };
+
+  const handleSearch = async (page = 1) => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:3003/api/employee?page=${page}&limit=6&sortBy=Email&sortOrder=asc&search=${searchQuery}`
+      );
+      const data = await response.json();
+      setEmployees(data.employees);
+      setTotalPages(data.totalPages);
+      setCurrentPage(data.currentPage);
+      setTotalCount(data.totalCount);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -68,44 +92,61 @@ function EmployeeList() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Navigation Bar */}
       <Navigation />
-
-      {/* Dashboard Bar */}
       <div className="bg-yellow-400 text-black font-semibold p-2 text-lg">
         Employee List
       </div>
 
-      {/* Main Content */}
-      <main className="p-6 space-y-4">
-        {/* White Bar - Employee Count and Create Employee Button */}
+      <main className="p-6 space-y-6">
         <div className="bg-white p-4 rounded-lg shadow-md flex justify-between items-center">
           <span className="text-gray-700 text-lg">
-            Total Count: {totalCount}
+            Total Employees: {totalCount}
           </span>
-          <Link
-            to="/create-employee"
-            className="btn btn-primary text-white hover:bg-yellow-500"
-          >
-            Create Employee
-          </Link>
+          <div className="flex flex-row gap-3">
+            <div className="flex flex-row gap-2">
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="input input-bordered text-white placeholder-gray-500"
+              />
+              <button
+                onClick={handleSearch}
+                className="flex items-center px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
+              >
+                <FaSearch className="mr-2" />
+              </button>
+            </div>
+            <Link
+              to="/create-employee"
+              className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
+            >
+              + Add Employee
+            </Link>
+          </div>
         </div>
 
-        {/* Employee Table */}
         <div className="overflow-x-auto bg-white p-4 rounded-lg shadow-md">
-          <table className="table w-full">
+          <table className="table-auto w-full border">
             <thead className="bg-gray-200 text-gray-800">
               <tr>
-                <th className="p-2">Unique Id</th>
-                <th className="p-2">Image</th>
-                <th className="p-2">Name</th>
-                <th className="p-2">Email</th>
-                <th className="p-2">Mobile</th>
-                <th className="p-2">Designation</th>
-                <th className="p-2">Gender</th>
-                <th className="p-2">Course</th>
-                <th className="p-2">Create Date</th>
-                <th className="p-2">Actions</th>
+                {[
+                  "Unique ID",
+                  "Image",
+                  "Name",
+                  "Email",
+                  "Mobile",
+                  "Designation",
+                  "Gender",
+                  "Course",
+                  "Create Date",
+                  "Actions",
+                ].map((heading) => (
+                  <th key={heading} className="p-2 text-left">
+                    {heading}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -115,43 +156,38 @@ function EmployeeList() {
                     key={employee._id}
                     className="hover:bg-gray-50 text-black"
                   >
-                    <td className="p-2">{employee.Id}</td> {/* Unique Id */}
+                    <td className="p-2">{employee.Id}</td>
                     <td className="p-2">
                       <img
                         src={employee.Image}
                         alt={employee.Name}
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="w-10 h-10 rounded-full object-cover"
                       />
-                    </td>{" "}
-                    {/* Image */}
-                    <td className="p-2">{employee.Name}</td> {/* Name */}
-                    <td className="p-2">{employee.Email}</td> {/* Email */}
-                    <td className="p-2">{employee.Mobile}</td> {/* Mobile */}
-                    <td className="p-2">{employee.Designation}</td>{" "}
-                    {/* Designation */}
-                    <td className="p-2">{employee.Gender}</td> {/* Gender */}
-                    <td className="p-2">{employee.Course}</td> {/* Course */}
+                    </td>
+                    <td className="p-2">{employee.Name}</td>
+                    <td className="p-2">{employee.Email}</td>
+                    <td className="p-2">{employee.Mobile}</td>
+                    <td className="p-2">{employee.Designation}</td>
+                    <td className="p-2">{employee.Gender}</td>
+                    <td className="p-2">{employee.Course.join(", ")}</td>{" "}
+                    {/* Join array for display */}
                     <td className="p-2">
                       {new Date(employee.Createdate).toLocaleDateString()}
-                    </td>{" "}
-                    {/* Create Date */}
-                    <td className="p-2">
+                    </td>
+                    <td className="p-2 space-x-2">
                       <button
                         onClick={() => handleEdit(employee.Id)}
-                        className="btn btn-sm btn-primary mr-2 hover:bg-blue-500"
+                        className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                       >
                         Edit
-                      </button>{" "}
-                      {/* Edit Button */}
+                      </button>
                       <button
                         onClick={() => handleDelete(employee.Id)}
-                        className="btn btn-sm btn-danger hover:bg-red-500"
+                        className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
                       >
                         Delete
-                      </button>{" "}
-                      {/* Delete Button */}
-                    </td>{" "}
-                    {/* Actions */}
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -163,6 +199,21 @@ function EmployeeList() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="flex justify-center space-x-2 mt-4">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => handlePageChange(i + 1)}
+              className={`px-4 py-2 border rounded-md ${
+                currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
         </div>
       </main>
     </div>

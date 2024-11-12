@@ -34,20 +34,22 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { Username, Password } = req.body;
+    console.log(Password + "Password");
 
     if (!Username || !Password) {
-      res.status(400).json({ error: "Fill out all the field" });
+      return res.status(400).json({ error: "Fill out all the fields" });
     }
 
     const user = await Login.findOne({ Username: Username });
-    console.log(user);
+    if (!user) {
+      return res.status(400).json({ error: "Invalid Credentials" });
+    }
 
-    const isPasswordCorrect =
-      (await bcrypt.compare(Password, user?.Password)) || "";
-
-    console.log(isPasswordCorrect);
-
-    if (!user || !isPasswordCorrect) {
+    const isPasswordCorrect = await bcrypt.compare(
+      String(Password),
+      user?.Password
+    );
+    if (!isPasswordCorrect) {
       return res.status(400).json({ error: "Invalid Credentials" });
     }
 
@@ -64,6 +66,7 @@ export const login = async (req, res) => {
         },
       });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: error.message });
   }
 };
