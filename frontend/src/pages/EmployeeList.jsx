@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa"; // Importing the search icon
 import Navigation from "../component/Navigation";
+import EmployeeCard from "../component/EmployeeCard";
 
 function EmployeeList() {
   const [employees, setEmployees] = useState([]);
@@ -16,7 +17,7 @@ function EmployeeList() {
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:3003/api/employee?page=${page}&limit=6&sortBy=Email&sortOrder=asc`
+        `http://localhost:3003/api/employee?page=${page}&limit=5&sortBy=Id&sortOrder=asc`
       );
       const data = await response.json();
       setEmployees(data.employees);
@@ -152,43 +153,12 @@ function EmployeeList() {
             <tbody>
               {employees.length > 0 ? (
                 employees.map((employee) => (
-                  <tr
-                    key={employee._id}
-                    className="hover:bg-gray-50 text-black"
-                  >
-                    <td className="p-2">{employee.Id}</td>
-                    <td className="p-2">
-                      <img
-                        src={employee.Image}
-                        alt={employee.Name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    </td>
-                    <td className="p-2">{employee.Name}</td>
-                    <td className="p-2">{employee.Email}</td>
-                    <td className="p-2">{employee.Mobile}</td>
-                    <td className="p-2">{employee.Designation}</td>
-                    <td className="p-2">{employee.Gender}</td>
-                    <td className="p-2">{employee.Course.join(", ")}</td>{" "}
-                    {/* Join array for display */}
-                    <td className="p-2">
-                      {new Date(employee.Createdate).toLocaleDateString()}
-                    </td>
-                    <td className="p-2 space-x-2">
-                      <button
-                        onClick={() => handleEdit(employee.Id)}
-                        className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(employee.Id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
+                  // eslint-disable-next-line react/jsx-key
+                  <EmployeeCard
+                    employee={employee}
+                    handleDelete={handleDelete}
+                    handleEdit={handleEdit}
+                  />
                 ))
               ) : (
                 <tr>

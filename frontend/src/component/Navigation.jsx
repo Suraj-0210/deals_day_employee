@@ -50,11 +50,13 @@ function Navigation() {
       <div className="container mx-auto flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center gap-2">
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhhGSBWiNsZE5qr79pEUYjsQgS_4vFQKV9xJ4pn_Ied8vwoyQ4YoboavNBi4G_EySwvWw&usqp=CAU"
-            alt="Logo"
-            className="w-10 h-10 rounded-full"
-          />
+          <Link to="/">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhhGSBWiNsZE5qr79pEUYjsQgS_4vFQKV9xJ4pn_Ied8vwoyQ4YoboavNBi4G_EySwvWw&usqp=CAU"
+              alt="Logo"
+              className="w-10 h-10 rounded-full"
+            />
+          </Link>
         </div>
 
         {/* Navigation Links */}
