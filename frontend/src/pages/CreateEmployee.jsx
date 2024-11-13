@@ -8,6 +8,7 @@ import {
 } from "firebase/storage";
 import { app } from "../firebase";
 import Navigation from "../component/Navigation";
+import InfoForm from "../component/InfoForm";
 
 function CreateEmployee() {
   const [employee, setEmployee] = useState({
@@ -117,166 +118,15 @@ function CreateEmployee() {
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">
             Add a New Employee
           </h2>
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              <div className="form-control w-full">
-                <label className="label text-gray-800">Employee Name</label>
-                <input
-                  type="text"
-                  name="Name"
-                  value={employee.Name}
-                  onChange={handleChange}
-                  className="input input-bordered w-full text-white placeholder-gray-500"
-                  placeholder="Enter Name"
-                  required
-                />
-              </div>
-
-              <div className="form-control w-full">
-                <label className="label text-gray-800">Employee Email</label>
-                <input
-                  type="email"
-                  name="Email"
-                  value={employee.Email}
-                  onChange={handleChange}
-                  className="input input-bordered w-full text-white placeholder-gray-500"
-                  placeholder="Enter Email"
-                  required
-                />
-              </div>
-
-              <div className="form-control w-full">
-                <label className="label text-gray-800">Employee Mobile</label>
-                <input
-                  type="text" // Changed to text to control length manually
-                  name="Mobile"
-                  value={employee.Mobile}
-                  onChange={handleChange}
-                  maxLength={10} // Set maxLength attribute for better UX
-                  className="input input-bordered w-full text-white placeholder-gray-500"
-                  placeholder="Enter Mobile No"
-                  required
-                />
-              </div>
-
-              <div className="form-control w-full">
-                <label className="label text-gray-800">Designation</label>
-                <select
-                  name="Designation"
-                  value={employee.Designation}
-                  onChange={handleChange}
-                  className="select select-bordered w-full text-white"
-                  required
-                >
-                  <option value="">Select Designation</option>
-                  <option value="HR">HR</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Sales">Sales</option>
-                </select>
-              </div>
-
-              <div className="form-control w-full">
-                <label className="label text-gray-800">Gender</label>
-                <div className="flex gap-4 text-black">
-                  <label>
-                    <input
-                      type="radio"
-                      name="Gender"
-                      value="Male"
-                      checked={employee.Gender === "Male"}
-                      onChange={handleChange}
-                      className="radio"
-                    />
-                    Male
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name="Gender"
-                      value="Female"
-                      checked={employee.Gender === "Female"}
-                      onChange={handleChange}
-                      className="radio"
-                    />
-                    Female
-                  </label>
-                </div>
-              </div>
-
-              <div className="form-control w-full">
-                <label className="label text-gray-800">Course</label>
-                <div className="flex gap-4 text-black">
-                  <label>
-                    <input
-                      type="checkbox"
-                      name="Course"
-                      value="MCA"
-                      checked={employee.Course.includes("MCA")}
-                      onChange={handleChange}
-                      className="checkbox"
-                    />
-                    MCA
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      name="Course"
-                      value="BCA"
-                      checked={employee.Course.includes("BCA")}
-                      onChange={handleChange}
-                      className="checkbox"
-                    />
-                    BCA
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      name="Course"
-                      value="BSC"
-                      checked={employee.Course.includes("BSC")}
-                      onChange={handleChange}
-                      className="checkbox"
-                    />
-                    BSC
-                  </label>
-                </div>
-              </div>
-
-              <div className="form-control w-full">
-                <label className="label text-gray-800">Employee Image</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="file-input file-input-bordered w-full"
-                />
-              </div>
-
-              {uploadProgress > 0 && (
-                <progress
-                  value={uploadProgress}
-                  max={100}
-                  className="progress progress-info mt-2"
-                >
-                  {uploadProgress}%
-                </progress>
-              )}
-            </div>
-
-            <div className="flex justify-end mt-6">
-              <button
-                type="submit"
-                className={`btn btn-primary text-white ${
-                  loading ? "disabled" : ""
-                }`}
-                disabled={
-                  loading || (uploadProgress > 0 && uploadProgress < 100)
-                }
-              >
-                {loading ? "Creating..." : "Create Employee"}
-              </button>
-            </div>
-          </form>
+          <InfoForm
+            handleChange={handleChange}
+            handleImageChange={handleImageChange}
+            handleSubmit={handleSubmit}
+            employee={employee}
+            uploadProgress={uploadProgress}
+            loading={loading}
+            isCreate={true}
+          />
         </div>
       </main>
     </div>

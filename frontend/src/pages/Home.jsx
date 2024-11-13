@@ -12,9 +12,7 @@ function Home() {
 
       {/* Main Content */}
       <main className="flex justify-center items-center h-[70vh]">
-        <h1 className="text-3xl font-bold text-gray-800">
-          Welcome Admin Panel
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-800">Welcome Admin</h1>
       </main>
     </div>
   );
